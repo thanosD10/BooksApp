@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Book App</title>
+</head>
+
+<body
+    style="background: url(https://assets.thespinoff.co.nz/1/2021/05/GettyImages-1154728362.jpg); background-size: 100% 110%; background-attachment:fixed;">
+    <h1 style="background-color:DodgerBlue; color:orange; text-align:center;">e-Library</h1>
+
+
+    <table id="addBookTable" ; align="center">
+        <h2 align="center"> Add a new Book:</h2>
+        <tr>
+            <td align="right">
+                Author:
+                <input type="text" id="author">
+            </td>
+        </tr>
+        <tr>
+            <td align="right">
+                Title:
+                <input type="text" id="title">
+            </td>
+        </tr>
+        <tr>
+            <td align="right">
+                Price:
+                <input type="text" id="price">
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                Genre:
+                <select name="genre" id="genre">
+                    <option value="science fiction">Science fiction</option>
+                    <option value="satire">Satire</option>
+                    <option value="drama">Drama</option>
+                    <option value="action/adventure">Action and Adventure</option>
+                    <option value="romance">Romance</option>
+                    <option value="mystery">Mystery</option>
+                    <option value="horror">Horror</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <input type="button" id="addButton" value="Submit">
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <p id="addBookError" style="color:red;"> </p>
+            </td>
+        </tr>
+        <tr>
+            <td align="right">
+            </td>
+        </tr>
+    </table>
+
+    <table id="searchBookTable" ; align="center">
+        <h2 align="center"> Search for a Book:</h2>
+        <tr>
+            <td align="center">
+                Search:
+                <input type="text" id="search">
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <input type="button" id="searchButton" value="Search">
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <p id="searchBookError" style="color:red;"> </p>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <div id="searchResultsArea" style="background-color:orange; border: 1px solid black;">--- results ---</div>
+            </td>
+        </tr>
+    </table>
+
+
+    <script type="text/javascript">
+
+        window.addEventListener('load', (event) => {
+            document.getElementById('addButton').addEventListener('click', function (event) {
+                let divElem = document.getElementById('searchResultsArea');
+                divElem.innerHTML = '--- results ---';
+                document.getElementById("searchBookError").innerHTML = '';
+
+                const authorValue = document.getElementById('author').value;
+                const titleValue = document.getElementById('title').value;
+                const priceValue = document.getElementById('price').value;
+                const genreValue = document.getElementById('genre').value;
+
+                if (isNaN(priceValue)) {
+                    document.getElementById('addBookError').innerHTML = 'Price value must be a number!';
+                    event.preventDefault();
+                    return false;
+
+                }
+                if (priceValue < 0 || priceValue > 999) {
+                    document.getElementById('addBookError').innerHTML = 'Invalid price value!';
+                    event.preventDefault();
+                    return false;
+                }
+                if (/[^a-zA-Z\s]/.test(authorValue)) {
+                    document.getElementById('addBookError').innerHTML = 'Invalid author name!';
+                    event.preventDefault();
+                    return false;
+                }
+                if (authorValue == '' || titleValue == '' || priceValue == '') {
+                    document.getElementById('addBookError').innerHTML = 'Please complete all fields to continue!';
+                    event.preventDefault();
+                    return false;
+                }
+
+                document.getElementById('addBookError').innerHTML = '';
+
+                const book = {
+                    'id': Date.now(),
+                    'author': authorValue,
+                    'title': titleValue,
+                    'genre': genreValue,
+                    'price': priceValue
+                };
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://localhost:3000/books/', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(JSON.stringify(book));
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status == 200) {
+                            alert(xhr.responseText);
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('searchButton').addEventListener('click', function (event) {
+                document.getElementById('addBookError').innerHTML = '';
+
+                const searchValue = document.getElementById('search').value;
+                let divElem = document.getElementById('searchResultsArea');
+
+                if (searchValue == '') {
+                    document.getElementById('searchBookError').innerHTML = "Empty search field!";
+                    divElem.innerHTML = '--- results ---';
+                    event.preventDefault();
+                    return false;
+                }
+
+                document.getElementById('searchBookError').innerHTML = '';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', `http://localhost:3000/books/${searchValue}`, true);
+                xhr.send();
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status == 200) {
+                            const results = JSON.parse(xhr.responseText);
+                            divElem.innerHTML = ``;
+                            if (results.length == 0) {
+                                divElem.innerHTML += 'NO RESULTS';
+                            } else {
+                                for (let i = 0; i < results.length; i++) {
+                                    const item = results[i];
+
+                                    divElem.innerHTML += `AUTHOR: ${item.author}, TITLE: ${item.title}, PRICE: ${item.price}, GENRE: ${item.genre}<br>`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
